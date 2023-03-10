@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <title>Flask Bank Account</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
+{% endblock %}
+
+{% block content %}
+    <h2 style="text-align: center;">Welcome {{ username }} to your Flask Bank Account</h2>
+    
+    <div style="display: flex; justify-content: center;">
+        <button type="button" onclick="showDepositForm()" class="btn">Deposit</button>
+        <button type="button" onclick="showWithdrawForm()" class="btn">Withdraw</button>
+        <form action="/" method="GET"><button type="submit" class="btn">Log Out</button></form>
+    </div>
+
+    <h3 id="balance_heading">Current Balance: ${{ '{:,.2f}'.format(balance) }}</h3>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes">
+            {% for category, message in messages %}
+                <h4 class="flash-{{ category }}" style="text-align: center; margin-bottom:15px;">{{ message }}</h4>
+            {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <div id="transaction-form" style="display: none;">
+        <form id="transaction-form-inner" method="POST" style="text-align:center;">
+          <table style="margin:0 auto;">
+            <caption id="transaction-type-label"></caption>
+            <input type="hidden" id="transaction-type" name="transaction-type">
+            <tr>
+              <td><label for="amount">Amount:</label></td>
+              <td><input type="number" id="amount" name="amount" step="0.01" min="0.01" max="99999.99" required></td>
+            </tr>
+            <tr>
+              <td><label for="memo">Memo:</label></td>
+              <td><textarea id="memo" name="memo" maxlength="25"></textarea></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td><button type="submit" class="transaction-form-button" style="width: 100%;"></button></td>
+            </tr>
+          </table>
+        </form>
+      </div>
+      <div id="transaction-table-container">
+        <table id="transaction-table">
+          <caption style="font-size:1.25em; margin: 10px;">User Transactions</caption>
+          <tr>
+            <th>Time</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Memo</th>
+          </tr>
+          {% for index, transaction in transactions.iterrows() %}
+            <tr>
+              <td>{{ transaction.time }}</td>
+              <td>{{ transaction.type.capitalize() }}</td>
+              <td>${{ '{:,.2f}'.format(transaction.amount) }}</td>
+              <td>{{ transaction.memo }}</td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+
+      $(document).ready(function() {
+        $('#transaction-table').DataTable();
+      });
+      
+      function showDepositForm() {
+          hideForm();
+          document.getElementById("transaction-form").style.display = "block";
+          document.getElementById("transaction-type-label").textContent = "Deposit Form";
+          document.getElementById("transaction-type").value = "deposit";
+          document.getElementById("transaction-form-inner").setAttribute("action", "/deposit");
+          document.querySelector(".transaction-form-button").textContent = "Deposit";
+      }
+
+      function showWithdrawForm() {
+          hideForm();
+          document.getElementById("transaction-form").style.display = "block";
+          document.getElementById("transaction-type-label").textContent = "Withdrawal Form";
+          document.getElementById("transaction-type").value = "withdraw";
+          document.getElementById("transaction-form-inner").setAttribute("action", "/withdraw");
+          document.querySelector(".transaction-form-button").textContent = "Withdraw";
+      }
+
+      function hideForm() {
+          document.getElementById("transaction-form").style.display = "none";
+          document.getElementById("transaction-type-label").textContent = "";
+          document.getElementById("transaction-type").value = "";
+          document.getElementById("transaction-form-inner").setAttribute("action", "");
+          document.getElementById("amount").value = "";
+          document.getElementById("memo").value = "";
+          document.querySelector(".transaction-form-button").textContent = "";
+      }
+    </script>
+{% endblock %}
+
